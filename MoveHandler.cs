@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using System.Collections;
 public class MoveHandler : MonoBehaviour
 {
+    //public ParticleSystem bloodSpatter;
     bool isKnockedBack = false;
     public LayerMask whatIsSafe;
     public LayerMask whatIsGround;
@@ -72,11 +73,12 @@ public class MoveHandler : MonoBehaviour
     }
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Enemy"))
+        if (collision.gameObject.CompareTag("Enemy") && !isSafe())
         {
             rb.AddForce ((transform.position - collision.gameObject.transform.position).normalized * 30f, ForceMode.Impulse);
             StartCoroutine(KnockbackRoutine());
             GetComponent<PlayerSettings>().DamagePlayer(20f);
+            //bloodSpatter.Play();
         }
     }
 }
