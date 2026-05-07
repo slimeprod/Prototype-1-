@@ -30,6 +30,5 @@ public class DetectPlayer : MonoBehaviour
                 StartCoroutine(ChaseRoutine());
             }
         }
-        Debug.Log(playerLost);
     }
 }

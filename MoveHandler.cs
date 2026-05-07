@@ -2,6 +2,7 @@ using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using UnityEngine.ProBuilder;
 public class MoveHandler : MonoBehaviour
 {
     //public ParticleSystem bloodSpatter;
@@ -9,17 +10,31 @@ public class MoveHandler : MonoBehaviour
     public LayerMask whatIsSafe;
     public LayerMask whatIsGround;
     public Transform groundCheck;
-    public float jumpPower = 4f;
+    
     private Rigidbody rb;
-    public float walkspeed = 6f;
+    
     [SerializeField] private float currentSpeed = 0f;
     private PlayerControls playerControls;
     Vector2 moveInput;
+    [Header("Speeds")]
+    public float walkspeed = 6f;
+    public float jumpPower = 4f;
+    public float safeSpeed = 5f;
+    public float knockbackStrength = 20f;
+    public float knockbackDuration = 0.25f;
+
+
+    [Header("Dynamic Cam")]
+    private float normalFov = 0f;
+    public float safeWalkFov = 75f;
+    public float walkFOV = 80f;
+
 
     void Awake()
     {
         playerControls = new PlayerControls();
         rb = GetComponent<Rigidbody>();
+        normalFov = Camera.main.fieldOfView;
     }
     void OnEnable()
     {
@@ -56,15 +71,17 @@ public class MoveHandler : MonoBehaviour
     {
         return Physics.CheckSphere(groundCheck.position, 0.6f, whatIsSafe);
     }
-    IEnumerator KnockbackRoutine()
+    IEnumerator KnockbackRoutine(Vector3 forceDir)
     {
         isKnockedBack = true;
-        yield return new WaitForSeconds(0.2f); // how long knockback lasts
+        rb.linearVelocity = forceDir * knockbackStrength + Vector3.up * 2f;
+        yield return new WaitForSeconds(knockbackDuration); // how long knockback lasts
         isKnockedBack = false;
     }
     void Update()
     {
-        currentSpeed = Mathf.Lerp(currentSpeed, moveInput.magnitude > 0.2f ? walkspeed : 0f, 5f * Time.deltaTime);
+        Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, moveInput.magnitude > 0.1f ? walkFOV : isSafe() ? safeWalkFov : normalFov, 10f * Time.deltaTime);
+        currentSpeed = Mathf.Lerp(currentSpeed, moveInput.magnitude > 0.2f ? walkspeed : isSafe() ? safeSpeed : 0f, 5f * Time.deltaTime);
         if (!isKnockedBack)
         {
             Vector3 moveDir = (transform.right * moveInput.x + transform.forward * moveInput.y) * currentSpeed;
@@ -75,10 +92,9 @@ public class MoveHandler : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Enemy") && !isSafe())
         {
-            rb.AddForce ((transform.position - collision.gameObject.transform.position).normalized * 30f, ForceMode.Impulse);
-            StartCoroutine(KnockbackRoutine());
+            Vector3 dir = (transform.position - collision.gameObject.transform.position).normalized;
+            StartCoroutine(KnockbackRoutine(dir));
             GetComponent<PlayerSettings>().DamagePlayer(20f);
-            //bloodSpatter.Play();
         }
     }
 }
