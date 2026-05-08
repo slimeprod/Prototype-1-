@@ -13,7 +13,6 @@ public class MoveHandler : MonoBehaviour
     public Transform groundCheck;
     
     private Rigidbody rb;
-    
     [SerializeField] private float currentSpeed = 0f;
     private PlayerControls playerControls;
     Vector2 moveInput;
@@ -23,8 +22,6 @@ public class MoveHandler : MonoBehaviour
     public float safeSpeed = 5f;
     public float knockbackStrength = 20f;
     public float knockbackDuration = 0.25f;
-
-
     [Header("Dynamic Cam")]
     private float normalFov = 0f;
     public float safeWalkFov = 75f;
@@ -42,6 +39,7 @@ public class MoveHandler : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         normalFov = Camera.main.fieldOfView;
         startYSize = transform.localScale.y;
+        Camera.main.GetComponent<Animator>().Play("Idle");
     }
     void OnEnable()
     {
@@ -98,8 +96,19 @@ public class MoveHandler : MonoBehaviour
         yield return new WaitForSeconds(knockbackDuration); // how long knockback lasts
         isKnockedBack = false;
     }
+    IEnumerator InAirRoutine()
+    {
+        yield return new WaitWhile(() => !isGrounded());
+        Camera.main.GetComponent<Animator>().Play("Ground Thud");
+        yield return new WaitForSeconds(0.25f);
+        Camera.main.GetComponent<Animator>().Play("Idle");
+    }
     void Update()
     {
+        if (!isGrounded())
+        {
+            StartCoroutine(InAirRoutine());
+        }
         transform.localScale = new Vector3(transform.localScale.x, Mathf.Lerp(transform.localScale.y, isSliding ? slideSize : startYSize, 10f * Time.deltaTime), transform.localScale.z);
         if (moveInput.magnitude > 0.1f)
         {
