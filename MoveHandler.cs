@@ -28,8 +28,8 @@ public class MoveHandler : MonoBehaviour
     private float normalFov = 0f;
     public float safeWalkFov = 75f;
     public float walkFOV = 80f;
-
-
+    public float knockbackFov = 90f;
+    [SerializeField] private float targetFov;
     void Awake()
     {
         playerControls = new PlayerControls();
@@ -80,18 +80,32 @@ public class MoveHandler : MonoBehaviour
     }
     void Update()
     {
-        Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, moveInput.magnitude > 0.1f ? walkFOV : isSafe() ? safeWalkFov : normalFov, 10f * Time.deltaTime);
-        currentSpeed = Mathf.Lerp(currentSpeed, moveInput.magnitude > 0.2f ? walkspeed : isSafe() ? safeSpeed : 0f, 5f * Time.deltaTime);
+        
+
+        if (moveInput.magnitude > 0.1f)
+        {
+            targetFov = isSafe() ? safeWalkFov : walkFOV;
+        }   
+        else
+        {
+            targetFov = normalFov;
+        }
+
+        Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, targetFov, 10f * Time.deltaTime);
+
+        currentSpeed = Mathf.Lerp(currentSpeed, moveInput.magnitude > 0.2f ? walkspeed : moveInput.magnitude > 0.2f && isSafe() ? safeSpeed : 0f, 5f * Time.deltaTime);
         if (!isKnockedBack)
         {
             Vector3 moveDir = (transform.right * moveInput.x + transform.forward * moveInput.y) * currentSpeed;
             rb.linearVelocity = new Vector3(moveDir.x, rb.linearVelocity.y, moveDir.z);
         }
+        Debug.Log(isSafe());
     }
     void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Enemy") && !isSafe())
         {
+            targetFov = knockbackFov;
             Vector3 dir = (transform.position - collision.gameObject.transform.position).normalized;
             StartCoroutine(KnockbackRoutine(dir));
             GetComponent<PlayerSettings>().DamagePlayer(20f);

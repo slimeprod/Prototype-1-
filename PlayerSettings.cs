@@ -1,8 +1,10 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerSettings : MonoBehaviour
 {
+    public Slider healthBar;
     public float health = 0L;
     public MoveHandler moveHandler;
     public string playerType;
@@ -11,9 +13,11 @@ public class PlayerSettings : MonoBehaviour
     void Start()
     {
         health = (playerType == "Youtuber" ? 100L : 60L);
+        healthBar.maxValue = health;
     }
     void Update()
     {       
+        healthBar.value = Mathf.Lerp(healthBar.value, health, 10f * Time.unscaledDeltaTime);
         health = Mathf.Clamp(health, 0f, 100f);
         if (health == 0L)
         {
