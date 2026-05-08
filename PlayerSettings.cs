@@ -13,10 +13,10 @@ public class PlayerSettings : MonoBehaviour
     void Start()
     {
         health = (playerType == "Youtuber" ? 100L : 60L);
-        healthBar.maxValue = health;
     }
     void Update()
     {       
+        healthBar.maxValue = health;
         healthBar.value = Mathf.Lerp(healthBar.value, health, 10f * Time.unscaledDeltaTime);
         health = Mathf.Clamp(health, 0f, 100f);
         if (health == 0L)
